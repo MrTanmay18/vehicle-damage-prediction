@@ -1,10 +1,15 @@
+import os
+import shutil
 from PIL import Image
 import torch
 from torch import nn
 from torchvision import models, transforms
+from huggingface_hub import hf_hub_download
 
-trained_model=None
+trained_model = None
 class_names = ['F_Breakage', 'F_Crushed', 'F_Normal', 'R_Breakage', 'R_Crushed', 'R_Normal']
+
+MODEL_PATH = "model/saved_model.pth"
 
 
 class CarClassifierResNet(nn.Module):
@@ -29,49 +34,41 @@ class CarClassifierResNet(nn.Module):
         X = self.model(X)
         return X
 
+
+def ensure_model():
+    """Download the model from Hugging Face Hub if it isn't already on disk."""
+    if not os.path.exists(MODEL_PATH):
+        os.makedirs("model", exist_ok=True)
+        downloaded_path = hf_hub_download(
+            repo_id="MrTanmay18/saved_model.pth",
+            filename="saved_model.pth"
+        )
+        shutil.copy(downloaded_path, MODEL_PATH)
+
+
 def predict(image_path):
     image = Image.open(image_path).convert('RGB')
     transform = transforms.Compose([
-        transforms.Resize((224,224)),
+        transforms.Resize((224, 224)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-    image_tensor = transform(image).unsqueeze(0)  #(32,3,224,224)
+    image_tensor = transform(image).unsqueeze(0)  # (1,3,224,224)
 
     global trained_model
 
     if not trained_model:
+        ensure_model()
         trained_model = CarClassifierResNet()
         state_dict = torch.load(
-            "model/saved_model.pth",
+            MODEL_PATH,
             map_location="cpu"
         )
 
         trained_model.load_state_dict(state_dict)
         trained_model.eval()
 
-
-
     with torch.no_grad():
-        output = trained_model(image_tensor) #[[12,14,5,15,8,28]]
-        _, predicted_class = torch.max(output, 1) #we have to choose max value from above tensor (op: 28,5(index of max number))
+        output = trained_model(image_tensor)
+        _, predicted_class = torch.max(output, 1)
         return class_names[predicted_class.item()]
-
-
-
-
-
-import os
-from huggingface_hub import hf_hub_download
-
-MODEL_PATH = "model/saved_model.pth"
-
-if not os.path.exists(MODEL_PATH):
-    os.makedirs("model", exist_ok=True)
-    downloaded_path = hf_hub_download(
-        repo_id="your-username/your-model-repo",
-        filename="saved_model.pth"
-    )
-    # copy or symlink to expected path
-    import shutil
-    shutil.copy(downloaded_path, MODEL_PATH)
