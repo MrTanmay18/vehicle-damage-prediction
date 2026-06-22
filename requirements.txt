@@ -5,3 +5,10 @@ torch
 torchvision
 huggingface_hub
 Pillow
+
+streamlit==1.48.1
+numpy==2.1.3
+torch==2.4.1
+torchvision==0.19.1
+huggingface_hub
+Pillow
