@@ -1,5 +1,6 @@
 import os
 import shutil
+import hashlib
 from PIL import Image
 import torch
 from torch import nn
@@ -46,6 +47,11 @@ def ensure_model():
         shutil.copy(downloaded_path, MODEL_PATH)
 
 
+def file_hash(path):
+    with open(path, "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()
+
+
 def predict(image_path):
     image = Image.open(image_path).convert('RGB')
     transform = transforms.Compose([
@@ -59,6 +65,7 @@ def predict(image_path):
 
     if not trained_model:
         ensure_model()
+        print("MODEL HASH:", file_hash(MODEL_PATH))
         trained_model = CarClassifierResNet()
         state_dict = torch.load(
             MODEL_PATH,
