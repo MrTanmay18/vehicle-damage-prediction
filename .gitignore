@@ -1,0 +1,5 @@
+﻿*.pth
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+tem_file.jpg
