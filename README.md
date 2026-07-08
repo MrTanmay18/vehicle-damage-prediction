@@ -110,7 +110,7 @@ streamlit-app/
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/vehicle-damage-prediction.git
+git clone https://github.com/Mr.Tanmay18/vehicle-damage-prediction.git
 cd vehicle-damage-prediction
 ```
 
